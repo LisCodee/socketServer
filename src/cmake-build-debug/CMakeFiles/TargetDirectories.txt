@@ -1,3 +1,0 @@
-F:/CppProject/socketServer/src/cmake-build-debug/CMakeFiles/a.dir
-F:/CppProject/socketServer/src/cmake-build-debug/CMakeFiles/edit_cache.dir
-F:/CppProject/socketServer/src/cmake-build-debug/CMakeFiles/rebuild_cache.dir

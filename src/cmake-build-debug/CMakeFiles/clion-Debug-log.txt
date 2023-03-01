@@ -1,4 +1,0 @@
-"G:\programs\CLion 2022.1.3\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=G:/programs/CLion 2022.1.3/bin/ninja/win/x64/ninja.exe" -G Ninja -S F:\CppProject\socketServer\src -B F:\CppProject\socketServer\src\cmake-build-debug
--- Configuring done
--- Generating done
--- Build files have been written to: F:/CppProject/socketServer/src/cmake-build-debug
