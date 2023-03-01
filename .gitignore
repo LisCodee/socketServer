@@ -1,6 +1,9 @@
 src/cmake-build-debug/
 /.idea
 src/*.txt
+*.txt
+/build
+src/build/
 
 # Prerequisites
 *.d
