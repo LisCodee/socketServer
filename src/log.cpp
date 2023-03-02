@@ -8,7 +8,13 @@
 #include "utils.h"
 #include "string"
 #include "sstream"
-//std::mutex LogBase::m_mutexFStream;
+
+//初始化静态变量
+std::vector<AsyncLogger::LogItem>       AsyncLogger::logBuffer;
+std::mutex                              AsyncLogger::mutex_logBuffer;
+std::condition_variable                 AsyncLogger::mutex_cv;
+std::vector<std::thread*>               AsyncLogger::writeThreads;
+
 SyncLogger* SyncLogger::getSyncLogger(LOG_LEVEL l, std::string outputFile, bool toFile, bool truncate)
 {
     static SyncLogger* syncLogger;
@@ -19,7 +25,7 @@ SyncLogger* SyncLogger::getSyncLogger(LOG_LEVEL l, std::string outputFile, bool 
         {
             if (logFile.empty())
             {
-                long long now = utils::getMicroseconds();
+                std::string now = utils::getMicroTimeStr();
                 std::stringstream fileName;
                 fileName << now << ".log";
                 logFile = fileName.str();
@@ -78,21 +84,21 @@ void LogBase::outLog(LOG_LEVEL l, std::string content)
             std::cout << content;
         else
         {
-            utils::writeToFile(m_fStream, content);
+            if(!m_fStream->is_open())
+                m_fStream->open(m_logName);
             //当日志文件超过大小后自动截断
             m_fStream->seekg(0, std::ios::end);
             int size = m_fStream->tellg();
-            std::cout << "当前文件大小：" << size << "Bytes" << std::endl;
             if (size >= m_iMaxFileSize)
             {
                 m_fStream->close();
-                long long now = utils::getMicroseconds();
+                std::string now = utils::getMicroTimeStr();
                 std::stringstream newLogName;
                 newLogName << now << ".log";
                 m_fStream->open(newLogName.str(), std::ios::in | std::ios::app);
                 m_logName = newLogName.str();
             }
-
+            utils::writeToFile(m_fStream, content);
         }
     }
 }
@@ -147,22 +153,15 @@ void writeLogProc(AsyncLogger* logger)
         {
             //加锁logBuffer
             std::unique_lock<std::mutex> lock(AsyncLogger::mutex_logBuffer);
-            while(AsyncLogger::logBuffer.empty())
-            {
+            while (AsyncLogger::logBuffer.empty()) {
                 AsyncLogger::mutex_cv.wait(lock);
             }
             logItem = AsyncLogger::logBuffer.front();
             AsyncLogger::logBuffer.erase(AsyncLogger::logBuffer.begin());
+            logger->outLog(logItem.iLevel, logItem.iContent);
         }
-        logger->outLog(logItem.iLevel, logItem.iContent);
     }
 }
-
-//初始化静态变量
-std::vector<AsyncLogger::LogItem>       AsyncLogger::logBuffer;
-std::mutex                              AsyncLogger::mutex_logBuffer;
-std::condition_variable                 AsyncLogger::mutex_cv;
-std::vector<std::thread*>               AsyncLogger::writeThreads;
 
 AsyncLogger* AsyncLogger::getAsyncLogger(LOG_LEVEL l, std::string outputFile, bool toFile, bool truncate, int numThreads)
 {
@@ -174,7 +173,7 @@ AsyncLogger* AsyncLogger::getAsyncLogger(LOG_LEVEL l, std::string outputFile, bo
         {
             if (logFile.empty())
             {
-                time_t now = time(NULL);
+                std::string now = utils::getMicroTimeStr();
                 std::stringstream fileName;
                 fileName << now << ".log";
                 logFile = fileName.str();
@@ -227,4 +226,9 @@ void AsyncLogger::error(std::string detail, std::string callInfo, std::string th
 
 void AsyncLogger::fatal(std::string detail, std::string callInfo, std::string threadInfo) {
     addLogToBuffer(FATAL, getOutputInfo(FATAL, detail, threadInfo, callInfo));
+}
+
+void AsyncLogger::join() {
+    for (int i = 0; i < writeThreads.size(); ++i)
+        writeThreads[i]->join();
 }

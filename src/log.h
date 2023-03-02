@@ -27,7 +27,9 @@ public:
     LogBase(LOG_LEVEL l, bool toFile, bool truncate, std::string outputFile):m_eLevel(l), m_bToFile(toFile), m_bTruncate(truncate)
     {
         if(toFile)
+        {
             m_fStream = new std::fstream(outputFile, std::ios::in | std::ios::app);
+        }
     };
     virtual ~LogBase()
     {
@@ -40,6 +42,11 @@ public:
     virtual void error(std::string detail, std::string callInfo="", std::string threadInfo="") = 0;
     virtual void fatal(std::string detail, std::string callInfo="", std::string threadInfo="") = 0;
     void outLog(LOG_LEVEL l, std::string content);
+public:
+    void setTruncate(bool b){m_bTruncate = b;};
+    void setTruncateCount(int count){m_iTruncateCount = count;};
+    void setMaxFileSize(int size){m_iMaxFileSize = size;};
+    void setOutLevel(LOG_LEVEL l){m_eLevel = l;};
 
 protected:
     std::string getOutputInfo(LOG_LEVEL l, std::string detail, std::string threadInfo="", std::string callInfo="");
@@ -51,7 +58,7 @@ protected:
     std::fstream*   m_fStream = nullptr;        //文件输出流
     std::string     m_logName;                  //日志文件名字
     int             m_iTruncateCount = 512;     //截断数
-    int             m_iMaxFileSize = 10*1024;   //单个日志最大容量，10MB
+    int             m_iMaxFileSize = 10*1024*1024;   //单个日志最大容量，10MB
 public:
 //    static std::mutex      m_mutexFStream;             //fstream锁
 };
@@ -104,7 +111,7 @@ public:
     void warning(std::string detail, std::string callInfo="", std::string threadInfo="") override;
     void error(std::string detail, std::string callInfo="", std::string threadInfo="") override;
     void fatal(std::string detail, std::string callInfo="", std::string threadInfo="") override;
-
+    void join();
 private:
     void addLogToBuffer(LOG_LEVEL, std::string);
 
