@@ -42,6 +42,11 @@ public:
     virtual void error(std::string detail, std::string callInfo="", std::string threadInfo="") = 0;
     virtual void fatal(std::string detail, std::string callInfo="", std::string threadInfo="") = 0;
     void outLog(LOG_LEVEL l, std::string content);
+public:
+    void setTruncate(bool b){m_bTruncate = b;};
+    void setTruncateCount(int count){m_iTruncateCount = count;};
+    void setMaxFileSize(int size){m_iMaxFileSize = size;};
+    void setOutLevel(LOG_LEVEL l){m_eLevel = l;};
 
 protected:
     std::string getOutputInfo(LOG_LEVEL l, std::string detail, std::string threadInfo="", std::string callInfo="");
