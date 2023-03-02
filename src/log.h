@@ -51,7 +51,9 @@ protected:
     std::fstream*   m_fStream = nullptr;        //文件输出流
     std::string     m_logName;                  //日志文件名字
     int             m_iTruncateCount = 512;     //截断数
-    int             m_iMaxFileSize = 10*1024*1024;   //单个日志最大容量，10MB
+    int             m_iMaxFileSize = 10*1024;   //单个日志最大容量，10MB
+public:
+//    static std::mutex      m_mutexFStream;             //fstream锁
 };
 
 /**

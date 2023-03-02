@@ -3,6 +3,7 @@
 //
 
 #include "utils.h"
+#include "chrono"
 
 bool utils::writeToFile(std::fstream* fs, std::string content)
 {
@@ -13,4 +14,13 @@ bool utils::writeToFile(std::fstream* fs, std::string content)
         return true;
     }
     return false;
+}
+
+long long utils::getMicroseconds()
+{
+    auto now = std::chrono::system_clock::now();
+    auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto value = now_us.time_since_epoch();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(value);
+    return static_cast<long long>(duration.count());
 }
