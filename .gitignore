@@ -4,6 +4,7 @@ src/*.txt
 *.txt
 /build
 src/build/
+!CMakeLists.txt
 
 # Prerequisites
 *.d
