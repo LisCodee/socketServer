@@ -13,4 +13,4 @@ int main()
         logger->error("这是一条ERROR级别的日志",__func__);
         logger->fatal("这是一条FATAL级别的日志",__func__);
     }
-}
+}ge
