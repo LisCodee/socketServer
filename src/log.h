@@ -115,7 +115,6 @@ public:
     static std::mutex                                       mutex_logBuffer;
     static std::condition_variable                          mutex_cv;
     static std::vector<std::thread*>                        writeThreads;
-    static std::mutex                                       mutex_fStream;
 };
 
 #endif

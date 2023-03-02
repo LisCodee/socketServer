@@ -10,7 +10,6 @@
 #include "sstream"
 
 //初始化静态变量
-std::mutex                              AsyncLogger::mutex_fStream;
 std::vector<AsyncLogger::LogItem>       AsyncLogger::logBuffer;
 std::mutex                              AsyncLogger::mutex_logBuffer;
 std::condition_variable                 AsyncLogger::mutex_cv;
