@@ -145,12 +145,12 @@ void writeLogProc(AsyncLogger* logger)
         {
             //加锁logBuffer
             std::unique_lock<std::mutex> lock(AsyncLogger::mutex_logBuffer);
-            AsyncLogger::mutex_cv.wait(lock);
-            if(!AsyncLogger::logBuffer.empty())
+            while(AsyncLogger::logBuffer.empty())
             {
-                logItem = AsyncLogger::logBuffer.front();
-                AsyncLogger::logBuffer.erase(AsyncLogger::logBuffer.begin());
+                AsyncLogger::mutex_cv.wait(lock);
             }
+            logItem = AsyncLogger::logBuffer.front();
+            AsyncLogger::logBuffer.erase(AsyncLogger::logBuffer.begin());
         }
         logger->outLog(logItem.iLevel, logItem.iContent);
     }
