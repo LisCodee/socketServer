@@ -6,6 +6,7 @@
 #include "chrono"
 #include "iomanip"
 #include "sstream"
+#include "algorithm"
 
 
 bool utils::writeToFile(std::fstream* fs, std::string content)
@@ -28,4 +29,24 @@ std::string utils::getMicroTimeStr()
     std::stringstream timeStr;
     timeStr << std::put_time(&bt, "%Y%m%d%H%M%S")<< ms.count();
     return timeStr.str();
+}
+
+std::vector<std::string> utils::split(const std::string & line, char deli) {
+    std::vector<std::string> res;
+    int begin = 0, end;
+    while(begin < line.length())
+    {
+        //find the last deli
+        while(line[begin] == deli) ++begin;
+        end = begin + 1;
+        while(line[end] != deli) ++end;
+        res.push_back(line.substr(begin, end));
+        begin = end + 1;
+    }
+    return res;
+}
+
+std::string& utils::upper(std::string & line) {
+    std::transform(line.begin(), line.end(), line.begin(), [](unsigned char c){ return std::toupper(c); });
+    return line;
 }
