@@ -27,7 +27,9 @@ public:
     LogBase(LOG_LEVEL l, bool toFile, bool truncate, std::string outputFile):m_eLevel(l), m_bToFile(toFile), m_bTruncate(truncate)
     {
         if(toFile)
+        {
             m_fStream = new std::fstream(outputFile, std::ios::in | std::ios::app);
+        }
     };
     virtual ~LogBase()
     {
@@ -51,7 +53,7 @@ protected:
     std::fstream*   m_fStream = nullptr;        //文件输出流
     std::string     m_logName;                  //日志文件名字
     int             m_iTruncateCount = 512;     //截断数
-    int             m_iMaxFileSize = 10*1024;   //单个日志最大容量，10MB
+    int             m_iMaxFileSize = 10*1024*1024;   //单个日志最大容量，10MB
 public:
 //    static std::mutex      m_mutexFStream;             //fstream锁
 };
@@ -104,7 +106,7 @@ public:
     void warning(std::string detail, std::string callInfo="", std::string threadInfo="") override;
     void error(std::string detail, std::string callInfo="", std::string threadInfo="") override;
     void fatal(std::string detail, std::string callInfo="", std::string threadInfo="") override;
-
+    void join();
 private:
     void addLogToBuffer(LOG_LEVEL, std::string);
 
@@ -113,6 +115,7 @@ public:
     static std::mutex                                       mutex_logBuffer;
     static std::condition_variable                          mutex_cv;
     static std::vector<std::thread*>                        writeThreads;
+    static std::mutex                                       mutex_fStream;
 };
 
 #endif

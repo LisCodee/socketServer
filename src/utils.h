@@ -8,7 +8,7 @@
 namespace utils
 {
     bool writeToFile(std::fstream* fs, std::string content);
-    long long getMicroseconds();
+    std::string getMicroTimeStr();
 }
 
 #endif

@@ -4,6 +4,9 @@
 
 #include "utils.h"
 #include "chrono"
+#include "iomanip"
+#include "sstream"
+
 
 bool utils::writeToFile(std::fstream* fs, std::string content)
 {
@@ -16,11 +19,13 @@ bool utils::writeToFile(std::fstream* fs, std::string content)
     return false;
 }
 
-long long utils::getMicroseconds()
+std::string utils::getMicroTimeStr()
 {
     auto now = std::chrono::system_clock::now();
-    auto now_us = std::chrono::time_point_cast<std::chrono::microseconds>(now);
-    auto value = now_us.time_since_epoch();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(value);
-    return static_cast<long long>(duration.count());
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+    auto timer = std::chrono::system_clock::to_time_t(now);
+    std::tm bt = *std::localtime(&timer);
+    std::stringstream timeStr;
+    timeStr << std::put_time(&bt, "%Y%m%d%H%M%S")<< ms.count();
+    return timeStr.str();
 }
