@@ -3,4 +3,4 @@ project(socketServer)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(server log.h log.cpp utils.h utils.cpp  ConfigParse.cpp ConfigParse.h testConfigParse.cpp)
+add_executable(server log.h log.cpp utils.h utils.cpp  ConfigParse.cpp ConfigParse.h testConfigParse.cpp TcpConnection.cpp TcpConnection.h Channel.cpp Channel.h net.cpp net.h)
