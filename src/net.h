@@ -10,10 +10,9 @@
 #include <string>
 
 #else
-
+#define INVALID_SOCKET -1
 #endif
 
-#define INVALID_FD -1
 
 namespace net{
 #ifdef WIN32
@@ -53,8 +52,8 @@ namespace net{
     void setReusePort(SOCKET sockFd, bool on);
 
     int connect(SOCKET sockFd, const struct sockaddr_in& addr);
-    void bindOrDir(SOCKET sockFd, const struct sockaddr_in& addr);
-    void listenOrDir(SOCKET sockFd);
+    void bindOrDie(SOCKET sockFd, const struct sockaddr_in& addr);
+    void listenOrDie(SOCKET sockFd);
     SOCKET accept(SOCKET sockFd, const sockaddr_in* addr);
 
     int32_t read(SOCKET sockFd, void *buf, int32_t count);
@@ -65,9 +64,17 @@ namespace net{
     void toIp(char* buf, size_t size, const struct sockaddr_in& addr);
     void fromIpPort(const char* ip, short port, struct sockaddr_in* addr);
 
-//    int getSocketError();
-
+    /**
+     * 获取socket绑定的地址信息
+     * @param sockFd 需要获得socket描述符
+     * @return 绑定的地址
+     */
     struct sockaddr_in getLocalAddr(SOCKET sockFd);
+    /**
+     * 获取socket套接字远程的连接信息
+     * @param sockFd 需要获取的套接字
+     * @return 远程地址信息
+     */
     struct sockaddr_in getPeerAddr(SOCKET sockFd);
     void reportNetErrorAndExit(std::string info);
 }
