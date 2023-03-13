@@ -4,10 +4,15 @@
 
 #include "net.h"
 #include "iostream"
+#include "log.h"
+#include "sstream"
 
 void printErrorMsg(std::string errInfo)
 {
-    std::cout << errInfo << "\terrno:" << getSocketError();
+    SyncLogger* logger = SyncLogger::getSyncLogger(SyncLogger::INFO, "./log.txt", false);
+    std::stringstream output;
+    output << errInfo << "\terrno:" << getSocketError();
+    logger->error(output.str());
 }
 
 #ifdef WIN32
@@ -49,6 +54,13 @@ SOCKET net::createOrDie() {
     }
 }
 
+void net::listenOrDie(SOCKET sockFd) {
+    if(listen(sockFd, 0) < 0)
+    {
+        reportNetErrorAndExit("listen socket error");
+    }
+}
+
 void net::setNonblockAndCloseOnExec(SOCKET sockFd) {
 #ifdef WIN32
     u_long mode = 1;
@@ -73,18 +85,14 @@ SOCKET net::createNonblockOrDie() {
 }
 
 void net::setReuseAddr(SOCKET sockFd, bool on) {
-    int iOptValue = 1;
-    int iOptLen = sizeof iOptValue;
-    if(setsockopt(sockFd, SOL_SOCKET, SO_REUSEADDR, (char*)&iOptValue, iOptLen) == -1)
+    if(setsockopt(sockFd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof on) == -1)
     {
         reportNetErrorAndExit("setReuseAddr error" );
     }
 }
 
 void net::setReusePort(SOCKET sockFd, bool on) {
-    int iOptValue = 1;
-    int iOptLen = sizeof iOptValue;
-    if(setsockopt(sockFd, SOL_SOCKET, SO_REUSEADDR, (char*)&iOptValue, iOptLen) == -1)
+    if(setsockopt(sockFd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof on) == -1)
     {
         reportNetErrorAndExit("setReusePort error" );
     }
@@ -94,7 +102,9 @@ int net::connect(SOCKET sockFd, const struct sockaddr_in &addr) {
     if(::connect(sockFd, (struct sockaddr*)&addr, sizeof addr)!=0)
     {
         printErrorMsg("connect error");
+        return -1;
     }
+    return 0;
 }
 
 void net::bindOrDie(SOCKET sockFd, const struct sockaddr_in &addr) {
@@ -105,12 +115,13 @@ void net::bindOrDie(SOCKET sockFd, const struct sockaddr_in &addr) {
 }
 
 SOCKET net::accept(SOCKET sockFd, const sockaddr_in *addr) {
-    SOCKET clientFd;
+    SOCKET clientFd = -1;
     int clientAddrLen = sizeof addr;
-    if(::accept(sockFd, (struct sockaddr*)addr, &clientAddrLen) == INVALID_SOCKET)
+    if((clientFd = ::accept(sockFd, (struct sockaddr*)addr, &clientAddrLen)) == INVALID_SOCKET)
     {
         printErrorMsg("Accept error");
     }
+    return clientFd;
 }
 
 int32_t net::read(SOCKET sockFd, void *buf, int32_t count) {
@@ -182,3 +193,54 @@ struct sockaddr_in net::getPeerAddr(SOCKET sockFd) {
     getpeername(sockFd, (struct sockaddr*)&peerAddr, &len);
     return peerAddr;
 }
+
+int net::getSocketError() {
+#ifdef WIN32
+    return ::WSAGetLastError();
+#else
+    return errno;
+#endif
+}
+
+void net::Socket::bindAddress(const sockaddr_in &localAddr) {
+    bindOrDie(sockfd_, localAddr);
+}
+
+void net::Socket::listen() {
+    net::listenOrDie(sockfd_);
+}
+
+int net::Socket::accept(const sockaddr_in &peerAddr) {
+    SOCKET peerfd = net::accept(sockfd_, &peerAddr);
+    if(peerfd < 0){
+        return INVALID_SOCKET;
+    }
+    return peerfd;
+}
+
+void net::Socket::setReuseAddr(bool on) {
+    net::setReuseAddr(sockfd_, on);
+}
+
+void net::Socket::setReusePort(bool on) {
+    net::setReusePort(sockfd_, on);
+}
+
+void net::Socket::setTcpNoDelay(bool on) {
+    int optval = on ? 1 : 0;
+#ifdef WIN32
+    ::setsockopt(sockfd_, IPPROTO_TCP, TCP_NODELAY, (char*)&optval, sizeof(optval));
+#else
+    ::setsockopt(sockfd_, IPPROTO_TCP, TCP_NODELAY, &optval, static_cast<socklen_t>(sizeof optval));
+#endif
+}
+
+void net::Socket::setKeepAlive(bool on) {
+    int optval = on ? 1 : 0;
+#ifdef WIN32
+    ::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, (char*)&optval, sizeof optval);
+#else
+	::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval));
+#endif
+}
+

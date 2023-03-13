@@ -5,47 +5,43 @@
 #ifndef SOCKETSERVER_NET_H
 #define SOCKETSERVER_NET_H
 
-#ifdef WIN32
-#include <winsock.h>
-#include <string>
-
-#else
-#define INVALID_SOCKET -1
-#endif
+#include "Platform.h"
+#include "string"
 
 
 namespace net{
-#ifdef WIN32
-#define getSocketError() WSAGetLastError()
-    typedef INT32 int32_t;
-    /**
-     * WSAStartup 函数启动进程对 Winsock DLL 的使用
-     */
-    void initSocketOrDie();
-    /**
-     * 进程退出时调用
-     */
-    void uninitSocket();
-#else
-#define closesocket(s) close(s)
-#define getSocketError() errno
-    typedef int SOCKET;
-#endif
-    /**
-     * 创建socket，如果失败则退出
-     * @return socketFd
-     */
-    SOCKET createOrDie();
-    /**
-     * 创建非阻塞socket，如果失败则退出
-     * @return socketFd
-     */
-    SOCKET createNonblockOrDie();
 
     /**
-     * 改变socket的属性为非阻塞
-     * @param sockFd
+     * Wrapper of socket file descriptor
      */
+    class Socket
+    {
+    public:
+        //防止隐式转换
+        explicit Socket(int sockfd):sockfd_(sockfd) {  }
+        ~Socket(){ closesocket(sockfd_);}
+        SOCKET fd() const {return sockfd_;}
+
+        void bindAddress(const sockaddr_in& localAddr);
+
+        void listen();
+
+        int accept(const sockaddr_in& peerAddr);
+
+        void setReuseAddr(bool on);
+
+        void setReusePort(bool on);
+
+        void setKeepAlive(bool on);
+
+        void setTcpNoDelay(bool on);
+
+    private:
+        const SOCKET sockfd_;
+    };
+
+    SOCKET createOrDie();
+    SOCKET createNonblockOrDie();
     void setNonblockAndCloseOnExec(SOCKET sockFd);
 
     void setReuseAddr(SOCKET sockFd, bool on);
@@ -77,6 +73,8 @@ namespace net{
      */
     struct sockaddr_in getPeerAddr(SOCKET sockFd);
     void reportNetErrorAndExit(std::string info);
+    int getSocketError();
+//    void shutdownWrite(SOCKET sockfd);
 }
 
 #endif //SOCKETSERVER_NET_H
