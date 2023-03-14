@@ -12,14 +12,43 @@
 
 namespace net {
     class Channel;
-
+    ///
+    /// Reactor, at most one per thread.
+    ///
+    /// This is an interface class, so don't expose too much details.
     class EventLoop {
     public:
         typedef std::function<void()> Functor;
 
         EventLoop();
-
         ~EventLoop();
+        /**
+         * 必须在创建对象的线程中调用
+         */
+        void loop();
+        /**
+         * 退出循环
+         * 不是100%线程安全，最好使用shared_ptr<EventLoop>来保证线程安全
+         */
+        void quit();
+        /**
+         * Time when poll returns, usually means data arrival.
+         * @return
+         */
+        TimeStamp pollReturnTime() const  { return pollReturnTime_;}
+        /**
+         * 暂时不清楚作用
+         * @return
+         */
+        int64_t iteration() const {return iteration_;}
+        /**
+         * 立即在循环线程中运行回调函数。 它唤醒循环，并运行cb。 如果在同一个循环线程中，cb在函数内部运行。 可以从其他线程安全地调用。
+         */
+        void runInLoop(const Functor& cb);
+        /**
+         * 回调函数在循环线程中排队。 在完成loop后运行。 可以从其他线程安全地调用。
+         */
+        void queueInLoop(const Functor& cb);
 
     private:
         bool createWakeupFd();
@@ -40,10 +69,10 @@ namespace net {
         bool eventHandling_;
         bool callingPendingFunctors_;
         const std::thread::id threadId_;
-//        Timestamp                           pollReturnTime_;
+        TimeStamp                           pollReturnTime_;
 //        std::shared_ptr<Poller>             poller_;
 //        std::shared_ptr<TimerQueue>         timerQueue_;
-//        int64_t                             iteration_;
+        int64_t                             iteration_;
 #ifdef WIN32
         SOCKET m_wakeupFdListen;
         SOCKET m_wakeupFdSend;

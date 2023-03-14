@@ -35,6 +35,4 @@ namespace net{
     };
 }
 
-
-
 #endif //SOCKETSERVER_INETADDRESS_H
