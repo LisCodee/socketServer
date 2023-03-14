@@ -25,14 +25,14 @@ bool net::EventLoop::createWakeupFd() {
     {
         std::stringstream s;
         s << "Unable to bind address info, EventLoop:0x" << this;
-        m_logger->fatal(s.str());
+        LOGF(s.str().c_str());
         return false;
     }
     int usePort = ntohs(serverAddr.sin_port);
-    m_logger->info("wakeup fd use port:" + usePort);
+    LOGI("wakeup fd use port:%d", usePort);
     if(net::connect(m_wakeupFdSend, serverAddr) < 0)
     {
-        m_logger->fatal(std::string("Unable to connect to wakeup peer, EventLoop:0x") + this);
+        LOGF("Unable to connect to wakeup peer, EventLoop:0x%x", this);
         return false;
     }
 
@@ -40,7 +40,7 @@ bool net::EventLoop::createWakeupFd() {
     m_wakeupFdRecv = net::accept(m_wakeupFdSend, &clientAddr);
     if(m_wakeupFdRecv < 0)
     {
-        m_logger->fatal(std::string("Unable to accept wakeup peer, EventLoop:") + this);
+        LOGF("Unable to accept wakeup peer, EventLoop:%0x", this);
         return false;
     }
     net::setNonblockAndCloseOnExec(m_wakeupFdSend);
@@ -65,7 +65,7 @@ bool net::EventLoop::wakeup() {
     if(n != sizeof one)
     {
 
-        m_logger->fatal("wakeup() error:" + getSocketError());
+        LOGF("wakeup() error:%d", getSocketError());
         return false;
     }
     return true;
@@ -80,7 +80,7 @@ bool net::EventLoop::handleRead() {
 #endif
     if(n != sizeof one)
     {
-        m_logger->fatal("read error:" + getSocketError());
+        LOGF("read error:%d", getSocketError());
         return false;
     }
     return true;

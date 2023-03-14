@@ -1,18 +1,19 @@
 //
 // Created by Lijingxin on 2023/3/14.
 //
-
+#ifdef WIN32
 #include <processthreadsapi.h>
-#include <cstdarg>
+#include "debugapi.h"
+#endif
+
 #include "AsyncLog.h"
 #include "stdarg.h"
 #include "iostream"
-#include "sstream"
 
 #define MAX_LINE_LENGTH 256
 #define DEFAULT_ROLL_SIZE 10 * 1024 * 1024
 
-bool AsyncLog::m_bToFile = false;
+bool AsyncLog::m_bToFile = true;                    //这个变量没用到，使用m_strFileName是否为空来判断是否需要写入文件
 FILE* AsyncLog::m_hLogFile = NULL;
 std::string AsyncLog::m_strFileName = "default";
 std::string AsyncLog::m_strFileNamePid = "";
@@ -121,7 +122,10 @@ bool AsyncLog::output(LOG_LEVEL nLevel, const char *pszFmt, ...) {
     {
         //如果是fatal级别日志，采用同步写，以便程序能够及时结束
         std::cout << strLine << std::endl;
-
+#ifdef _WIN32
+        OutputDebugStringA(strLine.c_str());
+        OutputDebugStringA("\n");
+#endif
         if(!m_strFileName.empty())
         {
             //如果需要写文件
@@ -208,12 +212,17 @@ bool AsyncLog::output(LOG_LEVEL nLevel, const char *pszFileName, int nLineNo, co
     if(m_nCurrentLevel != LOG_LEVEL_FATAL)
     {
         std::lock_guard<std::mutex> lockGuard(m_mutexWrite);
-        m_listLinesToWrite.push_back(strLogMsg);
+        m_listLinesToWrite.push_back(strLine);
         m_cvWrite.notify_one();
     }
     else
     {
+        //采用同步写日志，以便使程序结束
         std::cout << strLine << std::endl;
+#ifdef _WIN32
+        OutputDebugStringA(strLine.c_str());
+        OutputDebugStringA("\n");
+#endif
         if(!m_strFileName.empty())
         {
             if(m_hLogFile == nullptr)
@@ -238,7 +247,7 @@ bool AsyncLog::output(LOG_LEVEL nLevel, const char *pszFileName, int nLineNo, co
             }
             writeToFile(strLine);
         }
-        if(nLevel == LOG_LEVEL_CRITICAL)
+        if(nLevel == LOG_LEVEL_FATAL)
             crash();
     }
     return true;
@@ -403,7 +412,7 @@ void AsyncLog::writeThreadProc() {
             strLine = m_listLinesToWrite.front();
             m_listLinesToWrite.pop_front();
         }
-        std::cout << strLine << std::endl;
+        std::cout << strLine;
         if(!m_strFileName.empty())
         {
             if(!writeToFile(strLine))
@@ -411,7 +420,6 @@ void AsyncLog::writeThreadProc() {
             m_iCurrentWriteSize += strLine.length();
         }
     }
-
     m_bRunning = false;
 }
 

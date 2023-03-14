@@ -13,6 +13,13 @@
 #include <mutex>
 #include <condition_variable>
 
+#define LOGD(...) AsyncLog::output(LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define LOGI(...) AsyncLog::output(LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define LOGW(...) AsyncLog::output(LOG_LEVEL_WARNING, __FILE__, __LINE__, __VA_ARGS__)
+#define LOGE(...) AsyncLog::output(LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#define LOGF(...) AsyncLog::output(LOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+#define LOGC(...) AsyncLog::output(LOG_LEVEL_CRITICAL, __FILE__, __LINE__, __VA_ARGS__)
+
 enum LOG_LEVEL {
     LOG_LEVEL_DEBUG,
     LOG_LEVEL_INFO,
@@ -59,7 +66,7 @@ private:
     static void writeThreadProc();
 
 private:
-    static bool m_bToFile;                                      //输出文件/控制台
+    static bool m_bToFile;                                      //输出文件/控制台，未使用
     static FILE* m_hLogFile;                                    //文件指针
     static std::string m_strFileName;                           //文件名
     static std::string m_strFileNamePid;                        //文件名中的进程id
@@ -70,10 +77,9 @@ private:
     static bool m_bExit;                                        //退出标志
     static bool m_bRunning;                                     //运行标志
     static std::list<std::string> m_listLinesToWrite;           //待写入日志
-    static std::shared_ptr<std::thread> m_spWriteThread;
-    static std::mutex m_mutexWrite;
-    static std::condition_variable m_cvWrite;
-
+    static std::shared_ptr<std::thread> m_spWriteThread;        //写日志线程
+    static std::mutex m_mutexWrite;                             //保护m_listLinesToWrite的互斥量
+    static std::condition_variable m_cvWrite;                   //条件变量
 };
 
 

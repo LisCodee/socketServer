@@ -6,7 +6,9 @@
 #define SOCKETSERVER_EVENTLOOP_H
 
 #include "net.h"
-#include "log.h"
+#include "AsyncLog.h"
+#include "vector"
+#include "TimeStamp.h"
 
 namespace net {
     class Channel;
@@ -49,7 +51,6 @@ namespace net {
 #else
         SOCKET m_wakeupFd;
 #endif
-        LogBase *m_logger;
         std::shared_ptr<Channel>            wakeupChannel_;
         // scratch variables
         ChannelList                         activeChannels_;
