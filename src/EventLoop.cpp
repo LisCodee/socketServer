@@ -5,13 +5,7 @@
 #include "EventLoop.h"
 #include "sstream"
 
-std::string operator+(std::string s, EventLoop* loop){
-    std::stringstream ss;
-    ss << s << loop;
-    return ss.str();
-}
-
-bool EventLoop::createWakeupFd() {
+bool net::EventLoop::createWakeupFd() {
 #ifdef WIN32
     m_wakeupFdListen = net::createOrDie();
     m_wakeupFdSend = net::createOrDie();
@@ -61,7 +55,7 @@ bool EventLoop::createWakeupFd() {
 #endif
 }
 
-bool EventLoop::wakeup() {
+bool net::EventLoop::wakeup() {
     uint64_t one = 1;
 #ifdef WIN32
     int32_t n = net::write(m_wakeupFdSend, &one, sizeof one);
@@ -77,7 +71,7 @@ bool EventLoop::wakeup() {
     return true;
 }
 
-bool EventLoop::handleRead() {
+bool net::EventLoop::handleRead() {
     uint64_t one = 1;
 #ifdef WIN32
     int n = net::read(m_wakeupFdRecv, &one, sizeof one);
@@ -90,8 +84,4 @@ bool EventLoop::handleRead() {
         return false;
     }
     return true;
-}
-
-void EventLoop::handleOtherThings() {
-//    std::vector<>
 }

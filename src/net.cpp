@@ -11,31 +11,9 @@ void printErrorMsg(std::string errInfo)
 {
     SyncLogger* logger = SyncLogger::getSyncLogger(SyncLogger::INFO, "./log.txt", false);
     std::stringstream output;
-    output << errInfo << "\terrno:" << getSocketError();
+    output << errInfo << "\terrno:" << net::getSocketError();
     logger->error(output.str());
 }
-
-#ifdef WIN32
-void net::initSocketOrDie() {
-    WORD wVersionRequested;
-    WSADATA wsaData;
-    /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
-    wVersionRequested = MAKEWORD(2,2);
-    int err = ::WSAStartup(wVersionRequested, &wsaData);
-
-    if (err != 0) {
-        reportNetErrorAndExit("WSAStartup failed with error: ");
-    }
-
-    if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
-        reportNetErrorAndExit("Could not find a usable version of Winsock.dll");
-    }
-}
-
-void net::uninitSocket() {
-    ::WSACleanup();
-}
-#endif
 
 void net::reportNetErrorAndExit(std::string info)
 {
@@ -203,7 +181,7 @@ int net::getSocketError() {
 }
 
 void net::Socket::bindAddress(const sockaddr_in &localAddr) {
-    bindOrDie(sockfd_, localAddr);
+    net::bindOrDie(sockfd_, localAddr);
 }
 
 void net::Socket::listen() {

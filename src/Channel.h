@@ -5,37 +5,59 @@
 #ifndef SOCKETSERVER_CHANNEL_H
 #define SOCKETSERVER_CHANNEL_H
 
-#include <security.h>
 #include "net.h"
 #include "EventLoop.h"
 
-class Channel {
+namespace net{
+    class EventLoop;
+    class Channel {
 
-public:
-    Channel(EventLoop* loop, int fd);
-    ~Channel();
+    public:
+        typedef std::function<void()> EventCallback;
+//        typedef std::function<void(Timestamp)> ReadEventCallback;
 
-    void handleEvent(TimeStamp recvTime);
-    int fd() const;
-    int events() const;
-    void setRevents(int revt);
-    void addRevents(int revt);
-    void removeEvents();
-    bool isNoneEvent() const;
+        Channel(EventLoop* loop, int fd);
+        ~Channel();
 
-    bool enableRead();
-    bool disableRead();
-    bool enableWrite();
-    bool disableWrite();
-    bool disableAll();
+//        void handleEvent(TimeStamp recvTime);
+        int fd() const;
+        int events() const;
+        void setRevents(int revt);
+        void addRevents(int revt);
+        void removeEvents();
+        bool isNoneEvent() const;
 
-    bool isWriting() const;
+        bool enableRead();
+        bool disableRead();
+        bool enableWrite();
+        bool disableWrite();
+        bool disableAll();
 
-private:
-    const int   m_fd;       //当前需要检测的事件
-    int         m_events;   //处理后的事件
-    int         m_revents;
-};
+        bool isWriting() const;
+
+    private:
+        static const int            kNoneEvent;
+        static const int            kReadEvent;
+        static const int            kWriteEvent;
+
+        EventLoop*                  loop_;
+        const int                   fd_;
+        int                         events_;
+        int                         revents_; // it's the received event types of epoll or poll
+        int                         index_; // used by Poller.
+        bool                        logHup_;
+
+        std::weak_ptr<void>         tie_;           //std::shared_ptr<void>/std::shared_ptr<void>可以指向不同的数据类型
+        bool                        tied_;
+        //bool                        eventHandling_;
+        //bool                        addedToLoop_;
+//        ReadEventCallback           readCallback_;
+        EventCallback               writeCallback_;
+        EventCallback               closeCallback_;
+        EventCallback               errorCallback_;
+    };
+}
+
 
 
 #endif //SOCKETSERVER_CHANNEL_H
